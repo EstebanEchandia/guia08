@@ -11,11 +11,30 @@ public class Tarea {
 	private LocalDateTime fechaInicio;
 	private LocalDateTime fechaFin;
 	private Boolean facturada;
+
 	
-	public void asignarEmpleado(Empleado e) {
+	
+	public Tarea(Integer id, String descripcion, Integer duracionEstimada) {
+		super();
+		this.id = id;
+		this.descripcion = descripcion;
+		this.duracionEstimada = duracionEstimada;
+		this.facturada = false;
+	}
+
+
+
+	public void asignarEmpleado(Empleado e) throws TareaYaFinalizoException,TareaYaAsignadaException{
+		if(fechaFin != null) throw new TareaYaFinalizoException();
+		else if(empleadoAsignado != null) throw new TareaYaAsignadaException();
+		else {
+			this.empleadoAsignado = e;
+		}
 		// si la tarea ya tiene un empleado asignado
 		// y tiene fecha de finalizado debe lanzar una excepcion
 	}
+	
+	
 
 	public Integer getId() {
 		return id;
@@ -69,5 +88,25 @@ public class Tarea {
 		return empleadoAsignado;
 	}
 	
+	public class TareaYaFinalizoException extends Exception {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public TareaYaFinalizoException () {
+			super("La Tarea seleccionada no existe.");
+		}
+	}
+public class TareaYaAsignadaException extends Exception {
+		/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+		public TareaYaAsignadaException () {
+			super("La Tarea seleccionada no existe.");
+		}
+	}
 	
 }
