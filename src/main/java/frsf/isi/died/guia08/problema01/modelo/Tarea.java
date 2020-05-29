@@ -98,15 +98,18 @@ public class Tarea {
 			super("La Tarea seleccionada no existe.");
 		}
 	}
-public class TareaYaAsignadaException extends Exception {
-		/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-		public TareaYaAsignadaException () {
-			super("La Tarea seleccionada no existe.");
-		}
-	}
+	public class TareaYaAsignadaException extends Exception {
+			/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 	
+			public TareaYaAsignadaException () {
+				super("La Tarea seleccionada no existe.");
+			}
+		}
+	public String guardarTarea() {
+		return id+","+descripcion+","+empleadoAsignado.guardarTarea();
+	}
+		
 }

@@ -10,6 +10,10 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import frsf.isi.died.guia08.problema01.modelo.Tarea.TareaYaAsignadaException;
+import frsf.isi.died.guia08.problema01.modelo.Tarea.TareaYaFinalizoException;
+
 import java.time.temporal.ChronoUnit;
 
 public class Empleado {
@@ -24,11 +28,12 @@ public class Empleado {
 	private LocalDate fechaContratacion;
 	
 	private Function<Tarea, Double> calculoPagoPorTarea;		
-	private Predicate<Tarea> puedeAsignarTarea;
-	
 	
 
-	
+	public List<Tarea> getTareasAsignadas() {
+		return tareasAsignadas;
+	}
+
 
 	public Empleado(Integer cuil, String nombre, Tipo tipo, Double costoHora) {
 		super();
@@ -49,16 +54,17 @@ public class Empleado {
 					break;
 						
 				case CONTRATADO: 
-					int diasEntre = (int) ChronoUnit.DAYS.between(t.getFechaInicio(), t.getFechaFin());
-					int horasTrabajoRealizado = diasEntre*4;
-					if(horasTrabajoRealizado < t.getDuracionEstimada()) {
+					int diasEntreCont = (int) ChronoUnit.DAYS.between(t.getFechaInicio(), t.getFechaFin());
+					int horasTrabajoRealizadoCont = diasEntreCont*4;
+					if(horasTrabajoRealizadoCont < t.getDuracionEstimada()) {
 						return t.getDuracionEstimada()*this.costoHora*1.3;
 					}
-					else if(horasTrabajoRealizado > t.getDuracionEstimada()+8) {
+					else if(horasTrabajoRealizadoCont > t.getDuracionEstimada()+8) {
 						return t.getDuracionEstimada()*this.costoHora*0.75;
 					}
 					break;
 			};
+			return costoHora;
 		};
 		
 	}
@@ -82,7 +88,7 @@ public class Empleado {
 	 */
 	public Double costoTarea(Tarea t) {
 		
-		if(t.getFechaFin() != null) {
+		if(t.getFechaFin() != null &&  this.tareasAsignadas.contains(t)) {
 			return calculoPagoPorTarea.apply(t);
 			
 		}
@@ -90,43 +96,51 @@ public class Empleado {
 			return t.getDuracionEstimada() * this.costoHora;
 	
 		}
-		
-		
-		return 0.0;
 	}
 		
-	public Boolean asignarTarea(Tarea t) throws EmpleadoYaAsignadoException, TareaYaFinalizadaException {
+	public Boolean asignarTarea(Tarea t) throws TareaYaAsignadaException, TareaYaFinalizoException {
 		
-		if(t.getEmpleadoAsignado() != null)
-			throw new EmpleadoYaAsignadoException();
-		else if(t.getFechaFin() != null) {
-			throw new TareaYaFinalizadaException();
-		}
 		switch(tipo) {
 			case CONTRATADO: 
 				int cantidadTareasAsignadas = (int) this.tareasAsignadas.stream()
-															.filter((t1) -> (t1.getFechaFin()!=null))
+															.filter((t1) -> (t1.getFechaFin() == null))
 															.count();		
 				if(cantidadTareasAsignadas >= 5) return false;
 				break;
 				
 			case EFECTIVO:
-				int horasTotEstimadas = this.tareasAsignadas.stream()
-										.mapToInt(t1 -> t.getDuracionEstimada())
-										.sum();
-				if(horasTotEstimadas+t.getDuracionEstimada() >= 15)return false;
+				
+				//int horasTotEstimadas = this.tareasAsignadas.stream()
+				//						.mapToInt(t1 -> t.getDuracionEstimada())
+				//						.sum();
+				
+				if((this.obtenerHorasTrabajo()+t.getDuracionEstimada()) >= 15)return false;
 				break;
 				
 		}
-		
 		this.tareasAsignadas.add(t);
+		t.asignarEmpleado(this);
 		return true;
 	}
+	
+	private Integer obtenerHorasTrabajo() {
+        Integer totalHoras=0;
+        for(Tarea unaTarea: tareasAsignadas) {
+             if(unaTarea!=null) {
+                 totalHoras=totalHoras+unaTarea.getDuracionEstimada();
+             }
+        }
+        return totalHoras;
+    }
+	
+	
+	
+	
 	
 	public void comenzar(Integer idTarea) throws TareaNoExisteException{
 		
 		Optional <Tarea> tarea =  this.tareasAsignadas.stream()
-							.filter(t1 -> (t1.getId() == idTarea))
+							.filter(t1 -> (idTarea == t1.getId()))
 							.findFirst();
 		
 		if(tarea.isEmpty()) throw new TareaNoExisteException();
@@ -134,6 +148,8 @@ public class Empleado {
 		t.setFechaInicio(LocalDateTime.now());
 	
 	}
+	
+	
 	
 	public void finalizar(Integer idTarea) throws TareaNoExisteException{
 		
@@ -215,6 +231,12 @@ public class Empleado {
 	}
 	public Integer getCuil() {
 		return cuil;
+	}
+
+
+	public String guardarTarea() {
+		
+		return nombre+","+cuil;
 	}
 	
 	
