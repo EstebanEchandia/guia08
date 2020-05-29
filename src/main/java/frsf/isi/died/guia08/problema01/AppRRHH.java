@@ -29,26 +29,32 @@ import frsf.isi.died.guia08.problema01.modelo.Tarea.TareaYaFinalizoException;
 import frsf.isi.died.guia08.problema01.modelo.Tipo;
 public class AppRRHH {
 	
-	private List<Empleado> empleados = new ArrayList<Empleado>();
-	private List<Tarea> tareas = new ArrayList<Tarea>();
+	private List<Empleado> empleados;
+	private List<Tarea> tareas;
 	
-	
-	
+	public AppRRHH() {
+		super();
+		empleados = new ArrayList<Empleado>();
+		tareas = new ArrayList<Tarea>();
+
+	}
+	//tested
 	public void agregarTarea(Integer id, String desc, Integer duracion) {
 		Tarea tarea = new Tarea(id,desc,duracion);
 		tareas.add(tarea);
 		
 	}
-	public void agregarEmpleadoContratado(Integer cuil,String nombre,Double costoHora) {
+	//tested
+	public void agregarEmpleadoContratado(Long cuil,String nombre,Double costoHora) {
 		// crear un empleado
 		// agregarlo a la lista
-		if (empleados == null) empleados = new ArrayList<Empleado>();
+		
 		Empleado e1 = new Empleado(cuil, nombre, Tipo.CONTRATADO, costoHora);
 		empleados.add(e1);
 		
 	}
-	
-	public void agregarEmpleadoEfectivo(Integer cuil,String nombre,Double costoHora) {
+	//tested
+	public void agregarEmpleadoEfectivo(Long cuil,String nombre,Double costoHora) {
 		// crear un empleado
 		// agregarlo a la lista		
 		if (empleados == null) empleados = new ArrayList<Empleado>();
@@ -56,30 +62,33 @@ public class AppRRHH {
 		empleados.add(e1);
 	}
 	
-	public void asignarTarea(Integer cuil,Integer idTarea,String descripcion,Integer duracionEstimada) {
+	
+	
+	public void asignarTarea(Long cuil,Integer idTarea,String descripcion,Integer duracionEstimada) {
 		// crear un empleado
 		// con el método buscarEmpleado() de esta clase
 		// agregarlo a la lista		
 		
-		Optional<Empleado> e = buscarEmpleado(emp -> emp.getCuil() == cuil);
+		Optional<Empleado> e = buscarEmpleado(emp -> emp.getCuil().equals(cuil));
 		if(e.isPresent()) {
 			Tarea t = new Tarea(idTarea, descripcion, duracionEstimada);
+			tareas.add(t);
+			System.out.println("La tarea se agrego correctamente");
 
 				try {
-					e.get().asignarTarea(t);
+					
+					Empleado e1 = e.get();
+					e1.asignarTarea(t);
+					
 					System.out.println("La tarea fue asignada correctamente");
 				} catch (TareaYaAsignadaException | TareaYaFinalizoException e1) {
-
 					e1.printStackTrace();
 				}
-				System.out.println("La tarea fue asignada");
-			
-			
-			
 		}
+		else System.out.println("Las tareas no fueron agregadas");
 	}
 	
-	public void empezarTarea(Integer cuil,Integer idTarea) {
+	public void empezarTarea(Long cuil,Integer idTarea) {
 		// busca el empleado por cuil en la lista de empleados
 		// con el método buscarEmpleado() actual de esta clase
 		// e invoca al método comenzar tarea
@@ -96,7 +105,7 @@ public class AppRRHH {
 	}
 	
 	
-	public void terminarTarea(Integer cuil,Integer idTarea) {
+	public void terminarTarea(Long cuil,Integer idTarea) {
 		Optional<Empleado> e = buscarEmpleado(emp -> emp.getCuil() == cuil);
 		if(e.isPresent()) {
 				try {
@@ -118,7 +127,7 @@ public class AppRRHH {
 				String linea = null;
 				while( (linea=in.readLine()) != null) {
 					String[] fila = linea.split(",");
-					this.agregarEmpleadoContratado(Integer.parseInt(fila[0]), fila[1], Double.parseDouble(fila[2]));
+					this.agregarEmpleadoContratado(Long.parseLong(fila[0]), fila[1], Double.parseDouble(fila[2]));
 					}				
 				}	
 			} catch (FileNotFoundException e) {
@@ -138,7 +147,7 @@ public class AppRRHH {
 				String linea = null;
 				while( (linea=in.readLine()) != null) {
 					String[] fila = linea.split(",");
-					this.agregarEmpleadoEfectivo(Integer.parseInt(fila[0]), fila[1], Double.parseDouble(fila[2]));
+					this.agregarEmpleadoEfectivo(Long.parseLong(fila[0]), fila[1], Double.parseDouble(fila[2]));
 					}				
 			}	
 		} catch (FileNotFoundException e) {
@@ -158,9 +167,13 @@ public class AppRRHH {
 		try (Reader fileReader = new FileReader (nombreArchivo)){
 			try (BufferedReader in = new BufferedReader (fileReader)) {
 				String linea = null;
-				while( (linea=in.readLine()) != null) {
+				while((linea = in.readLine()) != null) {
 					String[] fila = linea.split(",");
-					this.asignarTarea(Integer.parseInt(fila[3]), Integer.parseInt(fila[0]), fila[1], Integer.parseInt(fila[2]));	
+					Long cuil = Long.parseLong(fila[3]);
+					Integer id = Integer.parseInt(fila[0]);
+					String desc = fila[1];
+					Integer duracionEstimada = Integer.parseInt(fila[2]);
+					this.asignarTarea(cuil, id, desc, duracionEstimada);	
 					}				
 			}	
 		} catch (FileNotFoundException e) {
@@ -173,7 +186,7 @@ public class AppRRHH {
 		
 	}
 	
-	private void guardarTareasTerminadasCSV() throws Exception {
+	public void guardarTareasTerminadasCSV() throws Exception {
 		// guarda una lista con los datos de la tarea que fueron terminadas
 		// y todavía no fueron facturadas
 		// y el nombre y cuil del empleado que la finalizó en formato CSV 
@@ -213,4 +226,12 @@ public class AppRRHH {
 				.mapToDouble(e -> e.salario())
 				.sum();
 	}
+	public List<Empleado> getEmpleados() {
+		return empleados;
+	}
+	public List<Tarea> getTareas() {
+		return tareas;
+	}
+	
+	
 }

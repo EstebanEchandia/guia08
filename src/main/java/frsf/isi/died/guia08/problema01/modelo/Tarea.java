@@ -26,7 +26,7 @@ public class Tarea {
 
 	public void asignarEmpleado(Empleado e) throws TareaYaFinalizoException,TareaYaAsignadaException{
 		if(fechaFin != null) throw new TareaYaFinalizoException();
-		else if(empleadoAsignado != null) throw new TareaYaAsignadaException();
+		else if(this.empleadoAsignado != null) throw new TareaYaAsignadaException();
 		else {
 			this.empleadoAsignado = e;
 		}

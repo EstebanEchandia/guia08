@@ -20,7 +20,7 @@ public class Empleado {
 
 
 	
-	private Integer cuil;
+	private Long cuil;
 	private String nombre;
 	private Tipo tipo;
 	private Double costoHora;
@@ -35,7 +35,7 @@ public class Empleado {
 	}
 
 
-	public Empleado(Integer cuil, String nombre, Tipo tipo, Double costoHora) {
+	public Empleado(Long cuil, String nombre, Tipo tipo, Double costoHora) {
 		super();
 		this.cuil = cuil;
 		this.nombre = nombre;
@@ -43,41 +43,57 @@ public class Empleado {
 		this.costoHora = costoHora;
 		this.tareasAsignadas = new ArrayList<Tarea>();
 		
-		Function<Tarea, Double> calculoPagoPorTarea = (Tarea t)->{
-			switch(tipo) {
-				case EFECTIVO: 
-					int diasEntre = (int) ChronoUnit.DAYS.between(t.getFechaInicio(), t.getFechaFin());
-					int horasTrabajoRealizado = diasEntre*4;
-					if(horasTrabajoRealizado < t.getDuracionEstimada()) {
-						return t.getDuracionEstimada()*this.costoHora*1.2;
-					}
-					break;
+		switch(tipo) {
+			
+			case EFECTIVO: 
+					
+					calculoPagoPorTarea = (Tarea t)->{
+						double costoTarea=0.0;
+						int diasEntre = (int) ChronoUnit.DAYS.between(t.getFechaInicio(), t.getFechaFin());
+						int horasTrabajoRealizado = diasEntre*4;
 						
-				case CONTRATADO: 
-					int diasEntreCont = (int) ChronoUnit.DAYS.between(t.getFechaInicio(), t.getFechaFin());
-					int horasTrabajoRealizadoCont = diasEntreCont*4;
-					if(horasTrabajoRealizadoCont < t.getDuracionEstimada()) {
-						return t.getDuracionEstimada()*this.costoHora*1.3;
-					}
-					else if(horasTrabajoRealizadoCont > t.getDuracionEstimada()+8) {
-						return t.getDuracionEstimada()*this.costoHora*0.75;
-					}
-					break;
-			};
-			return costoHora;
-		};
+						if(horasTrabajoRealizado < t.getDuracionEstimada()) {
+							costoTarea= t.getDuracionEstimada()*this.costoHora*1.2;
+						}
+						else costoTarea = t.getDuracionEstimada()*this.costoHora;
+						return costoTarea;
+					};
+				break;
+								
+			case CONTRATADO: 
+					
+					calculoPagoPorTarea = (Tarea t)->{
+						double costoTarea=0.0;
+						int diasEntreCont = (int) ChronoUnit.DAYS.between(t.getFechaInicio(), t.getFechaFin());
+						int horasTrabajoRealizadoCont = diasEntreCont*4;
+						
+						if(horasTrabajoRealizadoCont < t.getDuracionEstimada()) {
+							costoTarea= t.getDuracionEstimada()*this.costoHora*1.3;
+						}
+						
+						else if(horasTrabajoRealizadoCont > t.getDuracionEstimada()+8) {
+							costoTarea= (t.getDuracionEstimada()*this.costoHora*0.75);
+						}
+						else costoTarea=t.getDuracionEstimada()*this.costoHora;
+						return costoTarea;
+					};
+				break;
+			
+		}
 		
 	}
 	
-	
+	//tested
 	public Double salario() {
 		
-		return this.tareasAsignadas.stream()
+		
+		double sum = this.tareasAsignadas.stream()
 							.filter((t1) -> (t1.getFacturada() == false && t1.getFechaFin() != null))
 							.peek(t1 -> t1.setFacturada(true))
-							.map(t1 -> this.costoTarea(t1))
-							.reduce(0.0, (a,b) -> a+b);
+							.mapToDouble(t1 -> this.costoTarea(t1))
+							.sum();
 		
+		return sum;
 	}
 	
 	/**
@@ -86,18 +102,21 @@ public class Empleado {
 	 * @param t
 	 * @return
 	 */
+	
+	//tested
 	public Double costoTarea(Tarea t) {
 		
-		if(t.getFechaFin() != null &&  this.tareasAsignadas.contains(t)) {
+		if(t.getFechaFin() != null) {
 			return calculoPagoPorTarea.apply(t);
 			
 		}
 		else {
-			return t.getDuracionEstimada() * this.costoHora;
+			return (t.getDuracionEstimada() * this.costoHora);
 	
 		}
 	}
 		
+	//tested
 	public Boolean asignarTarea(Tarea t) throws TareaYaAsignadaException, TareaYaFinalizoException {
 		
 		switch(tipo) {
@@ -118,10 +137,12 @@ public class Empleado {
 				break;
 				
 		}
+		
 		this.tareasAsignadas.add(t);
 		t.asignarEmpleado(this);
 		return true;
 	}
+	
 	
 	private Integer obtenerHorasTrabajo() {
         Integer totalHoras=0;
@@ -229,7 +250,7 @@ public class Empleado {
 			super("El Empleado ya esta asignado.");
 		}
 	}
-	public Integer getCuil() {
+	public Long getCuil() {
 		return cuil;
 	}
 
@@ -238,7 +259,24 @@ public class Empleado {
 		
 		return nombre+","+cuil;
 	}
-	
+
+
+	public Tipo getTipo() {
+		return tipo;
+	}
+
+
+	public String getNombre() {
+		return nombre;
+	}
+
+
+	public Double getCostoHora() {
+		return costoHora;
+	}
+
+
+
 	
 
 }
